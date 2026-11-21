@@ -11,6 +11,16 @@
 ![Host API](https://img.shields.io/badge/Host%20API-%E2%89%A5%201.4-orange.svg)
 ![i18n](https://img.shields.io/badge/i18n-ru%20%C2%B7%20en%20%C2%B7%20sr%20%C2%B7%20tg-blue.svg)
 
+![Community feed with posts, photos, likes and comments](docs/screenshots/01-feed.png)
+
+## Screenshots / Скриншоты
+
+| | |
+|---|---|
+| ![Post with comments](docs/screenshots/02-post.png)<br>**Post and comments** / Пост и комментарии | ![Member profile](docs/screenshots/03-profile.png)<br>**Profile, follow, counters** / Профиль, подписка, счётчики |
+| ![People search](docs/screenshots/04-people.png)<br>**People and follows** / Люди и подписки | ![Moderation queue](docs/screenshots/05-moderation.png)<br>**Reports queue: dismiss, hide, ban** / Очередь жалоб: отклонить, скрыть, забанить |
+| ![Members](docs/screenshots/06-members.png)<br>**Members: ban / unban** / Участники: бан и разбан | |
+
 ## Who is it for / Для кого
 
 - **Community owners** — hobby clubs, schools and courses, residential complexes, local groups, fan clubs, alumni — who want their own social network instead of a chat or a closed platform.
