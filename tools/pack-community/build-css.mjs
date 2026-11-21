@@ -68,7 +68,10 @@ const walk = (d) => {
   for (const f of fs.readdirSync(d, { withFileTypes: true })) {
     const p = path.join(d, f.name)
     if (f.isDirectory()) walk(p)
-    else if (/\.(vue|ts|js)$/.test(f.name)) for (const t of fs.readFileSync(p, 'utf8').match(/[^\s"'`<>=(){},;]+/g) ?? []) tokens.add(t)
+    else if (/\.(vue|ts|js)$/.test(f.name)) {
+      // Класс может содержать запятые и скобки (`grid-cols-[2rem_minmax(0,1fr)]`), поэтому берём и целые куски, и мелкие фрагменты.
+      for (const t of fs.readFileSync(p, 'utf8').match(/[^\s"'`<=]+/g) ?? []) { tokens.add(t); for (const x of t.split(/[(){},;]/)) if (x) tokens.add(x) }
+    }
   }
 }
 walk(path.join(configRoot, 'web/app'))
