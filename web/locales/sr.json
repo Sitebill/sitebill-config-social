@@ -69,6 +69,8 @@
     "set_public_feed_hint": "Kada je isključeno, tok i profile mogu čitati samo prijavljeni korisnici.",
     "set_posts_per_day": "Objava dnevno po osobi",
     "set_comments_per_day": "Komentara dnevno po osobi",
-    "denied": "Odeljak je dostupan samo administratoru sajta."
+    "denied": "Odeljak je dostupan samo administratoru sajta.",
+    "registration_hint": "Novi članovi mogu da se registruju samo ako je registracija uključena: Administracija → Podešavanja → Prijava i registracija → „Dozvoli registraciju novih korisnika“.",
+    "registration_hint_link": "Otvori podešavanja"
   }
 }

@@ -56,6 +56,7 @@ const manifest = {
   },
   sdk: { php: '1', web: '1' },
   requires: { host: '>=1.4' },
+  demo: { command: 'sc:seed-demo' },
   provider: 'SitebillApps\\Rumantic\\Social\\SocialServiceProvider',
   permissions: [],
   profiles: ['blank'],

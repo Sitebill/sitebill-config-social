@@ -59,7 +59,30 @@ function blocks(src) {
   return out
 }
 const keep = blocks(result.css).filter(b => /^@layer utilities$/.test(b.head) || /^@property /.test(b.head))
-const outCss = keep.map(b => b.text.trim()).join('\n') + '\n'
+// Оставляем только утилиты, чьи классы реально встречаются в исходниках приложения. Tailwind тянет в слой общие утилиты
+// (`.fixed`, `.absolute`, `.collapse`…); они лежат в том же слое, что и утилиты хоста, и, будучи подключены позже, бьют
+// его адаптивные варианты: `.fixed` перекрывает `lg:static` у боковой панели админки, и страница приложения уезжает
+// под меню (найдено в Docker-прогоне 2026-11-21).
+const tokens = new Set()
+const walk = (d) => {
+  for (const f of fs.readdirSync(d, { withFileTypes: true })) {
+    const p = path.join(d, f.name)
+    if (f.isDirectory()) walk(p)
+    else if (/\.(vue|ts|js)$/.test(f.name)) for (const t of fs.readFileSync(p, 'utf8').match(/[^\s"'`<>=(){},;]+/g) ?? []) tokens.add(t)
+  }
+}
+walk(path.join(configRoot, 'web/app'))
+const classOf = (head) => {
+  const m = /^\.((?:\\.|[^\s.:>+~[,\\])+)/.exec(head)
+  return m ? m[1].replace(/\\(.)/g, '$1') : null
+}
+function prune(block) {
+  if (!/^@layer utilities$/.test(block.head)) return block.text
+  const inner = block.text.slice(block.text.indexOf('{') + 1, block.text.lastIndexOf('}'))
+  const kept = blocks(inner).filter((r) => { const c = classOf(r.head); return c === null || tokens.has(c) })
+  return `${block.head} {\n${kept.map(r => r.text.trim()).join('\n')}\n}`
+}
+const outCss = keep.map(b => prune(b).trim()).join('\n') + '\n'
 if (!/@layer utilities/.test(outCss)) throw new Error('build-css: слой utilities пуст — Tailwind не нашёл классов')
 fs.mkdirSync(path.dirname(outFile), { recursive: true })
 fs.writeFileSync(outFile, outCss)

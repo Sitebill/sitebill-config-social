@@ -51,6 +51,8 @@ curl -fsSL https://sitebillcms.com/install.sh | sh -s -- --profile blank --apps 
 Needs Sitebill Community **1.6.4 or newer** (Host API 1.4). Demo posts: `php artisan sc:seed-demo`.
 Нужен Sitebill Community **1.6.4 и новее** (Host API 1.4). Демо-данные: `php artisan sc:seed-demo`.
 
+> **Turn on sign-up first. / Сначала включите регистрацию.** On a fresh install new users cannot register, only the admin can sign in. Open *Admin → Settings → Sign-in & registration* and enable **Allow new user registration**. / На чистой установке регистрация выключена: войти может только админ. Откройте *Админка → Настройки → Вход и регистрация* и включите **«Разрешить регистрацию новых пользователей»**.
+
 ## Open source, two ways to ship it
 
 One code, two ways to ship it:

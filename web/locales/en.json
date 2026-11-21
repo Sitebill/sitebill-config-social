@@ -69,6 +69,8 @@
     "set_public_feed_hint": "When off, only signed-in users can read the feed and profiles.",
     "set_posts_per_day": "Posts per day per person",
     "set_comments_per_day": "Comments per day per person",
-    "denied": "This section is available to the site administrator only."
+    "denied": "This section is available to the site administrator only.",
+    "registration_hint": "New members can join only if sign-up is enabled: Admin → Settings → Sign-in & registration → «Allow new user registration».",
+    "registration_hint_link": "Open settings"
   }
 }

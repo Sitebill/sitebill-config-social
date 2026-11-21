@@ -55,6 +55,12 @@ async function saveSettings() {
         <UButton size="sm" :variant="tab === 'settings' ? 'soft' : 'ghost'" color="neutral" @click="tab = 'settings'">{{ t('social.admin_settings') }}</UButton>
       </div>
 
+      <!-- Регистрация новых пользователей включается в настройках платформы и по умолчанию выключена: без неё в соцсеть войдёт только админ. -->
+      <div class="flex flex-wrap items-center gap-3 rounded-md border border-default p-3 text-sm text-muted">
+        <span class="min-w-0 flex-1">{{ t('social.registration_hint') }}</span>
+        <UButton size="xs" variant="outline" color="neutral" to="/admin/settings">{{ t('social.registration_hint_link') }}</UButton>
+      </div>
+
       <template v-if="tab === 'reports'">
         <div class="flex gap-2">
           <UButton size="xs" :variant="status === 'open' ? 'soft' : 'ghost'" color="neutral" @click="status = 'open'">{{ t('social.status_open') }}</UButton>
