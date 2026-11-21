@@ -1,0 +1,191 @@
+"A person in the community (configs/social, docs/SOCIAL_APP.md)."
+type SocialProfile {
+    user_id: Int!
+    "Lowercase latin handle, 3-30 chars."
+    handle: String!
+    name: String!
+    bio: String
+    website: String
+    avatar_url: String
+    followers_count: Int!
+    following_count: Int!
+    posts_count: Int!
+    is_banned: Boolean!
+    followed_by_me: Boolean!
+    is_me: Boolean!
+}
+
+type SocialPost {
+    id: ID!
+    body: String!
+    image_url: String
+    likes_count: Int!
+    comments_count: Int!
+    "Y-m-d H:i:s"
+    created_at: String!
+    liked_by_me: Boolean!
+    can_delete: Boolean!
+    author: SocialProfile!
+}
+
+type SocialComment {
+    id: ID!
+    post_id: Int!
+    body: String!
+    created_at: String!
+    can_delete: Boolean!
+    author: SocialProfile!
+}
+
+type SocialReport {
+    id: ID!
+    "post | comment | profile"
+    target_type: String!
+    target_id: Int!
+    reporter_name: String!
+    reason: String
+    "open | resolved"
+    status: String!
+    created_at: String!
+    excerpt: String!
+}
+
+type SocialConfig {
+    "False: guests cannot read the feed, the site shows a sign-in prompt."
+    public_feed: Boolean!
+    "The viewer is a signed-in, not banned member of this site."
+    can_post: Boolean!
+    is_moderator: Boolean!
+    me: SocialProfile
+}
+
+type SocialSettings {
+    public_feed: Boolean!
+    posts_per_day: Int!
+    comments_per_day: Int!
+}
+
+type SocialLikeResult {
+    liked: Boolean!
+    likes_count: Int!
+}
+
+type SocialFollowResult {
+    following: Boolean!
+    followers_count: Int!
+}
+
+enum SocialFeedScope {
+    ALL
+    FOLLOWING
+}
+
+enum SocialConnectionKind {
+    FOLLOWERS
+    FOLLOWING
+}
+
+input SocialProfileInput {
+    handle: String! @rules(apply: ["required", "regex:/^[A-Za-z0-9_]{3,30}$/"])
+    bio: String @rules(apply: ["nullable", "max:500"])
+    website: String @rules(apply: ["nullable", "max:255"])
+    "Path returned by the upload endpoint; null removes the avatar. Omit to keep."
+    avatar_path: String @rules(apply: ["nullable", "max:255"])
+}
+
+input SocialSettingsInput {
+    public_feed: Boolean
+    posts_per_day: Int @rules(apply: ["integer", "min:1", "max:1000"])
+    comments_per_day: Int @rules(apply: ["integer", "min:1", "max:5000"])
+}
+
+extend type Query {
+    "Public: what the page needs to render (works for guests)."
+    socialConfig: SocialConfig!
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@config")
+
+    "Public (when the community feed is public). `FOLLOWING` needs a signed-in member."
+    socialFeed(scope: SocialFeedScope = ALL after_id: ID limit: Int = 20): [SocialPost!]!
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@feed")
+
+    socialPost(id: ID!): SocialPost
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@post")
+
+    socialUserPosts(user_id: Int! after_id: ID limit: Int = 20): [SocialPost!]!
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@userPosts")
+
+    socialComments(post_id: Int!): [SocialComment!]!
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@comments")
+
+    socialProfile(handle: String!): SocialProfile
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@profileByHandle")
+
+    socialPeople(query: String limit: Int = 20): [SocialProfile!]!
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@people")
+
+    socialConnections(user_id: Int! kind: SocialConnectionKind = FOLLOWERS limit: Int = 30): [SocialProfile!]!
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@connections")
+
+    "Moderation queue."
+    socialAdminReports(status: String = "open" @rules(apply: ["in:open,resolved"]) limit: Int = 30): [SocialReport!]!
+        @guard @can(ability: "social.moderate", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@adminReports")
+
+    socialAdminMembers(query: String limit: Int = 30): [SocialProfile!]!
+        @guard @can(ability: "social.moderate", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@adminMembers")
+
+    socialAdminSettings: SocialSettings!
+        @guard @can(ability: "social.moderate", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@adminSettings")
+}
+
+extend type Mutation {
+    socialSaveProfile(input: SocialProfileInput!): SocialProfile!
+        @guard @can(ability: "social.member", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@saveProfile")
+
+    socialCreatePost(body: String! @rules(apply: ["max:2000"]) image_path: String @rules(apply: ["nullable", "max:255"])): SocialPost!
+        @guard @can(ability: "social.member", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@createPost")
+
+    "The author or a moderator."
+    socialDeletePost(id: ID!): Boolean!
+        @guard @can(ability: "social.member", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@deletePost")
+
+    socialToggleLike(post_id: Int!): SocialLikeResult!
+        @guard @can(ability: "social.member", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@toggleLike")
+
+    socialAddComment(post_id: Int! body: String! @rules(apply: ["max:1000"])): SocialComment!
+        @guard @can(ability: "social.member", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@addComment")
+
+    "The author or a moderator."
+    socialDeleteComment(id: ID!): Boolean!
+        @guard @can(ability: "social.member", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@deleteComment")
+
+    socialToggleFollow(user_id: Int!): SocialFollowResult!
+        @guard @can(ability: "social.member", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@toggleFollow")
+
+    "One report per member per object; repeating is harmless."
+    socialReport(target_type: String! @rules(apply: ["in:post,comment,profile"]) target_id: Int! reason: String @rules(apply: ["nullable", "max:500"])): Boolean!
+        @guard @can(ability: "social.member", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@report")
+
+    "dismiss | hide (hide the object) | ban (hide and ban the author)."
+    socialResolveReport(id: ID! action: String! @rules(apply: ["in:dismiss,hide,ban"])): Boolean!
+        @guard @can(ability: "social.moderate", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@resolveReport")
+
+    socialSetBanned(user_id: Int! banned: Boolean!): SocialProfile!
+        @guard @can(ability: "social.moderate", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@setBanned")
+
+    socialSaveSettings(input: SocialSettingsInput!): SocialSettings!
+        @guard @can(ability: "social.moderate", model: "Tenant")
+        @field(resolver: "App\\Configs\\Social\\GraphQL\\Resolvers\\SocialResolver@saveSettings")
+}
